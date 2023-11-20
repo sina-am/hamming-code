@@ -10,26 +10,39 @@
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script> 
+        crossorigin="anonymous"></script>
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
 
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
         onload="renderMathInElement(document.body);"></script>
     <script src="hamming.js"></script>
     <script src="content.js"></script>
     <script>
+        function getRandomBits(n) {
+            let str = "";
+            for (let i = 0; i < n; i++) {
+                str += Math.floor(Math.random() * 2);
+            }
+            return str;
+        }
+        window.onload = (event) => {
+            document.getElementById("msgInput").value = getRandomBits(4);
+            onEncode(null);
+            onCheckError(null);
+        }
         function onCheckError(event) {
             const r = convertToMatrix(document.getElementById("encodedResult").value.replace(' ', ''), 7);
             const zi = matrixMultiply(H, r);
             const z = applyModule(zi, 2);
-
-            console.log(z);
-            const errorLocations = checkError(r);
-            // document.getElementById("errorResult").innerText =
-            //     (errorLocations.length === 0) ? "there's no error" : `there are errors on bits ${errorLocations}`;
+            const errors = checkError(z);
             renderParityCheckMatrix(H, r, zi, z);
+            renderErrorBits(errors);
         }
 
         function onEncode(event) {
@@ -42,26 +55,25 @@
             const p = convertToMatrix(msg, 4);
             const xi = matrixMultiply(G, p);
             const x = applyModule(xi, 2);
-            renderTransmitDataMatrix(G, p, xi, x); 
-            document.getElementById("encodedResult").value = x.map( (elem) => elem.join('')).join(' ');
+            renderTransmitDataMatrix(G, p, xi, x);
+            document.getElementById("encodedResult").value = matrixToString(x);
+        }
+
+        function onCorrectError(event) {
+            const r = convertToMatrix(document.getElementById("encodedResult").value.replace(' ', ''), 7);
+            const rCorrected = correctErrors(r);
+            document.getElementById("encodedResult").value = matrixToString(rCorrected);
+            onCheckError(null);
         }
     </script>
     <style>
-        body {line-height: 2.0em;}
+        body {
+            line-height: 2.0em;
+        }
     </style>
 </head>
 
 <body>
-    <div class="mx-4">
-        <p>
-            Written by sina.a.m
-            (<i class="bi bi-github"></i>
-            <a class="link-secondary link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
-                href="https://github.com/sina-am/hamming-code">
-                Source code
-            </a>)
-        </p>
-    </div>
     <div class="container">
         <div class="m-4">
             <h1>Hamming (7, 4) encoding</h1>
@@ -74,28 +86,49 @@
         </div>
         <div class="mb-3">
             <label class="form-label" for="encodedResult">Transmitted: </label>
-            <input class="form-control" type="text" id="encodedResult" />
+            <input class="form-control" type="text" id="encodedResult" oninput="onCheckError(event)" />
         </div>
-        <div class="d-flex">
-            <button class="btn btn-outline-dark" onclick="onCheckError(event)">Check for error</button>
-            <p id="errorResult" class="mx-4"></p>
+        <div class="mb-3">
+            <button class="btn btn-outline-dark" onclick="onCorrectError(event)">Correct errors</button>
         </div>
-        <hr/>
+        <hr />
         <div id="content">
             <h3>Channel coding</h3>
-            Suppose we want to transmit data over a channel. Specifically, a binary symmetric channel meaning that error corruption does not favor either zero or one (it is symmetric in causing errors). Furthermore, all source vectors are assumed to be equiprobable. We take the product of G and p, with entries modulo 2, to determine the transmitted codeword x: 
+            Suppose that the p is the original message.
+            <div id="pFormula"></div>
+            Suppose we want to transmit data over a channel. Specifically, a binary symmetric channel meaning that error
+            corruption does not favor either zero or one (it is symmetric in causing errors). Furthermore, all source
+            vectors are assumed to be equiprobable. We take the product of G and p, with entries modulo 2, to determine
+            the transmitted codeword x:
             <div id="encodingFormula"></div>
-            This means that 0110011 would be transmitted instead of transmitting 1011. 
+            This means that <span id="encodedValue"> </span> would be transmitted instead of transmitting <span
+                id="msgValue">
+            </span>.
 
             <h3>Parity check</h3>
-            If no error occurs during transmission, then the received codeword r is identical to the transmitted codeword x:
-            <br/>
-            r = x 
+            If no error occurs during transmission, then the received codeword r is identical to the transmitted
+            codeword x:
+            <br />
+            r = x
             <br>
-            The receiver multiplies H and r to obtain the syndrome vector z, which indicates whether an error has occurred, and if so, for which codeword bit. Performing this multiplication (again, entries modulo 2): 
+            The receiver multiplies H and r to obtain the syndrome vector z, which indicates whether an error has
+            occurred, and if so, for which codeword bit. Performing this multiplication (again, entries modulo 2):
             <div id="parityCheckFormula"></div>
+            This means that there're errors on bits <span id="errorBits"></span>
         </div>
+        <footer class="mt-8 mx-4">
+            <hr />
+            <p>
+                Written by sina.a.m
+                (<i class="bi bi-github"></i>
+                <a class="link-secondary link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                    href="https://github.com/sina-am/hamming-code">
+                    Source code
+                </a>)
+            </p>
+        </footer>
     </div>
+
 </body>
 
 </html>

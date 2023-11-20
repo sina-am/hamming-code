@@ -19,8 +19,8 @@ const H = [
 // Convert string to a matrix with fixed len
 function convertToMatrix(str, len) {
     let a = [];
-    for(let i = 0; i < str.length; i+=len) {
-        a.push(str.slice(i, i+len).split("").map((value) => {return parseInt(value)}));
+    for (let i = 0; i < str.length; i += len) {
+        a.push(str.slice(i, i + len).split("").map((value) => { return parseInt(value) }));
     }
 
     return a;
@@ -30,11 +30,11 @@ function convertToMatrix(str, len) {
 function matrixMultiply(a, b) {
     let c = [];
     let sum = 0;
-    for(let i = 0; i < b.length; i++) {
+    for (let i = 0; i < b.length; i++) {
         c.push([])
-        for(let j = 0; j < a.length; j++) {
+        for (let j = 0; j < a.length; j++) {
             sum = 0;
-            for(let z = 0; z < b[i].length; z++) {
+            for (let z = 0; z < b[i].length; z++) {
                 sum += a[j][z] * b[i][z];
             }
             c[i].push(sum);
@@ -46,9 +46,9 @@ function matrixMultiply(a, b) {
 
 function applyModule(a, mod) {
     b = [];
-    for(let i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
         b.push([]);
-        for(let j = 0; j < a[0].length; j++) {
+        for (let j = 0; j < a[0].length; j++) {
             b[i].push(a[i][j] % mod);
         }
     }
@@ -63,23 +63,49 @@ function parityCheck(r) {
     return applyModule(matrixMultiply(H, r), 2);
 }
 
-function checkError(r) {
-    let z = parityCheck(r);
+function checkErrors(r) {
+    const z = parityCheck(r);
+    let errorBits = [];
     let errorBit = 0;
-    let index = 0;
-    let errorLocations = [];
-    for(let i = 0; i < z.length; i+=3) {
+    for (let i = 0; i < z.length; i++) {
         errorBit = 0;
-        for(let j = 0; j < 3; j++) {
-            errorBit += Math.pow(2, j) * z[i+j]
+        for (let j = 0; j < z[0].length; j++) {
+            errorBit += Math.pow(2, j) * z[i][j];
         }
-
-        if(errorBit !== 0) {
-            errorLocations.push(index * 7 + errorBit);
-        }
-        index++;
+        errorBits.push(errorBit);
     }
-    
-    return errorLocations;
+    return errorBits;
+}
+function correctErrors(r) {
+    const errorBits = checkErrors(r);
+    let rCorrected = [];
+    for (let i = 0; i < errorBits.length; i++) {
+        if (errorBits[i] === 0) {
+            rCorrected.push(r[i]);
+        } else {
+            let tmp = r[i];
+            if (tmp[errorBits[i] - 1] === 0) {
+                tmp[errorBits[i] - 1] = 1;
+            } else {
+                tmp[errorBits[i] - 1] = 0;
+            }
+            rCorrected.push(tmp);
+        }
+    }
+    return rCorrected;
+}
+function checkError(z) {
+    let errorBit = 0;
+    let errorBits = [];
+    for (let i = 0; i < z.length; i++) {
+        errorBit = 0;
+        for (let j = 0; j < z[0].length; j++) {
+            errorBit += Math.pow(2, j) * z[i][j];
+        }
+        if (errorBit !== 0) {
+            errorBits.push(i * 7 + errorBit);
+        }
+    }
+    return errorBits;
 }
 

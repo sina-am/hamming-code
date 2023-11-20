@@ -1,13 +1,7 @@
-// \\[
-// G = \\begin{pmatrix}
-// 1 & 1 & 0 & 1\\\\
-// 1 & 0 & 1 & 1\\\\
-// 1 & 0 & 0 & 0\\\\
-// 0 & 1 & 0 & 0\\\\
-// 0 & 0 & 1 & 0\\\\
-// 0 & 0 & 0 & 1
-// \\end{pmatrix} 
-//             \\]
+const matrixToString = (matrix) => {
+    return matrix.map((elem) => elem.join('')).join(' ');
+}
+
 const toLatex = (matrix) => {
     let str = "";
     for (let j = 0; j < matrix[0].length; j++) {
@@ -26,7 +20,7 @@ const torLatex = (matrix) => {
     let str = "";
     for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[0].length; j++) {
-            if(j === matrix[0].length - 1) {
+            if (j === matrix[0].length - 1) {
                 str += matrix[i][j];
             } else {
                 str += matrix[i][j] + "&"
@@ -56,7 +50,15 @@ function renderParityCheckMatrix(H, r, zi, z) {
     });
 }
 function renderTransmitDataMatrix(G, p, xi, x) {
-    let text = `x = G^{T} p =
+    let pFormula = `
+    p = \\begin{pmatrix}
+        d1\\\\d2\\\\d3\\\\d4  
+    \\end{pmatrix} = 
+    \\begin{pmatrix}
+        ${toLatex(p)}
+    \\end{pmatrix}`
+
+    let xFormula = `x = G ^ {T} p =
     \\begin{pmatrix}
     ${torLatex(G)}
     \\end{pmatrix}
@@ -64,14 +66,22 @@ function renderTransmitDataMatrix(G, p, xi, x) {
     ${toLatex(p)}
     \\end{pmatrix}
     =\\begin{pmatrix}
-    ${toLatex(xi)} 
+    ${toLatex(xi)}
     \\end{pmatrix}
     =\\begin{pmatrix}
     ${toLatex(x)}
     \\end{pmatrix}
     `
-    katex.render(text, document.getElementById("encodingFormula"), {
+    katex.render(pFormula, document.getElementById("pFormula"), {
+        throwOnError: true
+    });
+    katex.render(xFormula, document.getElementById("encodingFormula"), {
         throwOnError: true
     });
 
+    document.getElementById("encodedValue").innerText = matrixToString(x);
+    document.getElementById("msgValue").innerText = matrixToString(p);
+}
+function renderErrorBits(errorBits) {
+    document.getElementById("errorBits").innerText = errorBits;
 }
