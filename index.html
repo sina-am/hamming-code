@@ -64,6 +64,7 @@
             const x = applyModule(xi, 2);
             renderTransmitDataMatrix(G, p, xi, x);
             document.getElementById("encodedResult").value = matrixToString(x);
+            onCheckError(null);
         }
 
         function onCorrectError(event) {
