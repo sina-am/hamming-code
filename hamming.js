@@ -16,6 +16,14 @@ const H = [
     [0, 0, 0, 1, 1, 1, 1],
 ]
 
+function isBinaryString(str) {
+    for(let i = 0; i < str.length; i++) {
+        if((str[i] != '0') && (str[i] != '1')) {
+            return false;
+        }
+    }
+    return true;
+}
 // Convert string to a matrix with fixed len
 function convertToMatrix(str, len) {
     let a = [];

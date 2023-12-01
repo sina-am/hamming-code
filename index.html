@@ -37,7 +37,12 @@
             onCheckError(null);
         }
         function onCheckError(event) {
-            const r = convertToMatrix(document.getElementById("encodedResult").value.replace(' ', ''), 7);
+            const msg = document.getElementById("encodedResult").value.replace(' ', '');
+            if(!isBinaryString(msg)) {
+                return;
+            }
+
+            const r = convertToMatrix(msg, 7);
             const zi = matrixMultiply(H, r);
             const z = applyModule(zi, 2);
             const errors = checkError(z);
@@ -48,7 +53,9 @@
         function onEncode(event) {
             const msg = document.getElementById("msgInput").value;
             if ((msg.length === 0) || (msg.length % 4 !== 0)) {
-                document.getElementById("encodedResult").innerText = "message string should be a multiplication of 4";
+                return;
+            }
+            if(!isBinaryString(msg)) {
                 return;
             }
 
@@ -60,7 +67,12 @@
         }
 
         function onCorrectError(event) {
-            const r = convertToMatrix(document.getElementById("encodedResult").value.replace(' ', ''), 7);
+            const msg = document.getElementById("encodedResult").value.replace(' ', '');
+            if(!isBinaryString(msg)) {
+                return;
+            }
+
+            const r = convertToMatrix(msg, 7);
             const rCorrected = correctErrors(r);
             document.getElementById("encodedResult").value = matrixToString(rCorrected);
             onCheckError(null);
@@ -86,7 +98,9 @@
         </div>
         <div class="mb-3">
             <label class="form-label" for="encodedResult">Transmitted: </label>
-            <input class="form-control" type="text" id="encodedResult" oninput="onCheckError(event)" />
+            <input class="form-control" type="text" id="encodedResult" 
+                onkeypress="return event.charCode>=48 && event.charCode<=49" oninput="onCheckError(event)" />
+            Flipped bits: <span id="errorBits"></span>
         </div>
         <div class="mb-3">
             <button class="btn btn-outline-dark" onclick="onCorrectError(event)">Correct errors</button>
@@ -114,7 +128,6 @@
             The receiver multiplies H and r to obtain the syndrome vector z, which indicates whether an error has
             occurred, and if so, for which codeword bit. Performing this multiplication (again, entries modulo 2):
             <div id="parityCheckFormula"></div>
-            This means that there're errors on bits <span id="errorBits"></span>
         </div>
         <footer class="mt-8 mx-4">
             <hr />
