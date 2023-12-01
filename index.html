@@ -31,17 +31,20 @@
             }
             return str;
         }
+        function getBitsFrom(element) {
+            const msg = element.value.split(' ').join('');
+            if(!isBinaryString(msg)) {
+                return;
+            }
+            return msg;
+        }
         window.onload = (event) => {
             document.getElementById("msgInput").value = getRandomBits(4);
             onEncode(null);
             onCheckError(null);
         }
         function onCheckError(event) {
-            const msg = document.getElementById("encodedResult").value.replace(' ', '');
-            if(!isBinaryString(msg)) {
-                return;
-            }
-
+            const msg = getBitsFrom(document.getElementById("encodedResult"));
             const r = convertToMatrix(msg, 7);
             const zi = matrixMultiply(H, r);
             const z = applyModule(zi, 2);
@@ -51,11 +54,8 @@
         }
 
         function onEncode(event) {
-            const msg = document.getElementById("msgInput").value;
+            const msg = getBitsFrom(document.getElementById("msgInput"));
             if ((msg.length === 0) || (msg.length % 4 !== 0)) {
-                return;
-            }
-            if(!isBinaryString(msg)) {
                 return;
             }
 
@@ -67,11 +67,7 @@
         }
 
         function onCorrectError(event) {
-            const msg = document.getElementById("encodedResult").value.replace(' ', '');
-            if(!isBinaryString(msg)) {
-                return;
-            }
-
+            const msg = getBitsFrom(document.getElementById("encodedResult"));
             const r = convertToMatrix(msg, 7);
             const rCorrected = correctErrors(r);
             document.getElementById("encodedResult").value = matrixToString(rCorrected);
